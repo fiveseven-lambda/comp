@@ -1,0 +1,130 @@
+\documentclass{ltjsarticle}
+\usepackage{amsmath, amssymb}
+\usepackage{mathtools}
+\usepackage{bussproofs}
+\newcommand\sub{<\vcentcolon}
+\begin{document}
+\begin{center}
+\begin{tabular}{rcll}
+$t$ &$\to$& $x$ & （変数） \\
+&|& $t\;\texttt{(}\;(t\;\texttt{,})^*\;t^?\;\texttt{)}$ & （関数適用）
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{rcll}
+$T$ &$\to$& $\mathrm{A}$ & （原子型） \\
+&|& $\texttt{(}\;(T\;\texttt{,})^*\;T^?\;\texttt{):}\;T$ & （関数型）
+\end{tabular}
+\end{center}
+\begin{prooftree}
+\AxiomC{$x : T \in \Gamma$}
+\LeftLabel{\textsc{T-Var}: }
+\UnaryInfC{$\Gamma \vdash x : T$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t : \texttt{(} T_0 \texttt{,} \dotsc \texttt{,} T_n \texttt{):} T$}
+\AxiomC{$\Gamma \vdash t_0 : T_0$}
+\AxiomC{$\dotsc$}
+\AxiomC{$\Gamma \vdash t_n : T_n$}
+\LeftLabel{\textsc{T-App}: }
+\QuaternaryInfC{$\Gamma \vdash t \texttt{(} t_0 \texttt{,} \dotsc \texttt{,} t_n \texttt{)} : T$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t : S$}
+\AxiomC{$S \sub T$}
+\LeftLabel{\textsc{T-Sub}: }
+\BinaryInfC{$\Gamma \vdash t : T$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{}
+\LeftLabel{\textsc{S-Refl}: }
+\UnaryInfC{$S <: S$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$S \sub U$}
+\AxiomC{$U \sub T$}
+\LeftLabel{\textsc{S-Trans}: }
+\BinaryInfC{$S \sub T$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{}
+\LeftLabel{\textsc{S-Comp}: }
+\UnaryInfC{$
+  \texttt{(}T_0\texttt{,}\ldots\texttt{,}T_n\texttt{):}T
+  \sub
+  \texttt{((}
+    S_0\texttt{,}\ldots\texttt{,}S_m\texttt{):}T_0\texttt{,}
+    \ldots\texttt{,}
+    \texttt{(}S_0\texttt{,}\ldots\texttt{,}S_m\texttt{):}T_n
+  \texttt{):(}S_0\texttt{,}\ldots\texttt{,}S_m\texttt{):}T
+$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{}
+\LeftLabel{\textsc{S-Const}: }
+\UnaryInfC{$T \sub \texttt{(} S_0 \texttt{,} \ldots \texttt{,} S_m \texttt{):} T$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$S \sub T$}
+\AxiomC{$T_0 \sub S_0$}
+\AxiomC{$\dotsc$}
+\AxiomC{$T_n \sub S_n$}
+\LeftLabel{\textsc{S-Arrow}: }
+\QuaternaryInfC{$
+  \texttt{(}S_0\texttt{,}\ldots\texttt{,}S_n\texttt{):}S
+\sub
+  \texttt{(}T_0\texttt{,}\ldots\texttt{,}T_n\texttt{):}T
+$}
+\end{prooftree}
+
+たとえば，$\Gamma = x : \mathrm{A}, y : \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}, z : \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}$のとき
+\begin{prooftree}
+  \AxiomC{$z: \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}\in\Gamma$}
+  \RightLabel{(\textsc{T-Var})}
+  \UnaryInfC{$\Gamma\vdash z: \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}$}
+  \AxiomC{}
+  \RightLabel{(\textsc{S-Comp})}
+  \UnaryInfC{$
+    \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}
+    \sub
+    \texttt{((}\mathrm{A}\texttt{):}\mathrm{A}
+    \texttt{,(}\mathrm{A}\texttt{):}\mathrm{A}
+    \texttt{):(}\mathrm{A}\texttt{):}\mathrm{A}
+  $}
+  \RightLabel{(\textsc{T-Sub})}
+  \BinaryInfC{$
+    \Gamma\vdash z: 
+    \texttt{((}\mathrm{A}\texttt{):}\mathrm{A}
+    \texttt{,(}\mathrm{A}\texttt{):}\mathrm{A}
+    \texttt{):(}\mathrm{A}\texttt{):}\mathrm{A}
+  $}
+\end{prooftree}
+\begin{prooftree}
+  \AxiomC{$x : A \in \Gamma$}
+  \RightLabel{(\textsc{T-Var})}
+  \UnaryInfC{$\Gamma \vdash x : A$}
+  \AxiomC{}
+  \RightLabel{(\textsc{S-Const})}
+  \UnaryInfC{$\mathrm{A} \sub \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+  \RightLabel{(\textsc{T-Sub})}
+  \BinaryInfC{$\Gamma \vdash x : \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+\end{prooftree}
+\begin{prooftree}
+  \AxiomC{$y: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A} \in \Gamma$}
+  \RightLabel{(\textsc{T-Var})}
+  \UnaryInfC{$\Gamma \vdash y: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+\end{prooftree}
+より
+\begin{prooftree}
+  \AxiomC{$
+    \Gamma\vdash z: 
+    \texttt{((}\mathrm{A}\texttt{):}\mathrm{A}
+    \texttt{,(}\mathrm{A}\texttt{):}\mathrm{A}
+    \texttt{):(}\mathrm{A}\texttt{):}\mathrm{A}
+  $}
+  \AxiomC{$\Gamma \vdash x: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+  \AxiomC{$\Gamma \vdash y: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+  \RightLabel{(\textsc{T-App})}
+  \TrinaryInfC{$\Gamma \vdash z\texttt{(}x\texttt{,}y\texttt{)} : \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+\end{prooftree}
+\end{document}
