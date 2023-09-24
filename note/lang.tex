@@ -1,4 +1,4 @@
-\documentclass{ltjsarticle}
+\documentclass[landscape]{ltjsarticle}
 \usepackage{amsmath, amssymb}
 \usepackage{mathtools}
 \usepackage{bussproofs}
@@ -26,38 +26,33 @@ $T$ &$\to$& $\mathrm{A}$ & （原子型） \\
 \AxiomC{$\Gamma \vdash t_0 : T_0$}
 \AxiomC{$\dotsc$}
 \AxiomC{$\Gamma \vdash t_n : T_n$}
-\LeftLabel{\textsc{T-App}: }
+\LeftLabel{\textsc{T-App0}: }
 \QuaternaryInfC{$\Gamma \vdash t \texttt{(} t_0 \texttt{,} \dotsc \texttt{,} t_n \texttt{)} : T$}
 \end{prooftree}
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash t : S$}
-\AxiomC{$S \sub T$}
+\AxiomC{$\Gamma \vdash t : \texttt{(} T_0 \texttt{,} \dotsc \texttt{,} T_n \texttt{):} T$}
+\AxiomC{$\Gamma \vdash t_0 : \texttt{(} S_0 \texttt{,} \dotsc \texttt{,} S_m \texttt{):} T_0$}
+\AxiomC{$\dotsc$}
+\AxiomC{$\Gamma \vdash t_n : \texttt{(} S_0 \texttt{,} \dotsc \texttt{,} S_m \texttt{):} T_n$}
+\LeftLabel{\textsc{T-App1}: }
+\QuaternaryInfC{$\Gamma \vdash t \texttt{(} t_0 \texttt{,} \dotsc \texttt{,} t_n \texttt{)} : \texttt{(}S_0\texttt{,}\dotsc\texttt{,}S_m\texttt{):} T$}
+\end{prooftree}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash t : T$}
+\AxiomC{$T \sub T'$}
 \LeftLabel{\textsc{T-Sub}: }
-\BinaryInfC{$\Gamma \vdash t : T$}
+\BinaryInfC{$\Gamma \vdash t : T'$}
 \end{prooftree}
 \begin{prooftree}
 \AxiomC{}
 \LeftLabel{\textsc{S-Refl}: }
-\UnaryInfC{$S <: S$}
+\UnaryInfC{$T <: T$}
 \end{prooftree}
 \begin{prooftree}
-\AxiomC{$S \sub U$}
-\AxiomC{$U \sub T$}
+\AxiomC{$T \sub T'$}
+\AxiomC{$T' \sub T''$}
 \LeftLabel{\textsc{S-Trans}: }
-\BinaryInfC{$S \sub T$}
-\end{prooftree}
-\begin{prooftree}
-\AxiomC{}
-\LeftLabel{\textsc{S-Comp}: }
-\UnaryInfC{$
-  \texttt{(}T_0\texttt{,}\ldots\texttt{,}T_n\texttt{):}T
-  \sub
-  \texttt{((}
-    S_0\texttt{,}\ldots\texttt{,}S_m\texttt{):}T_0\texttt{,}
-    \ldots\texttt{,}
-    \texttt{(}S_0\texttt{,}\ldots\texttt{,}S_m\texttt{):}T_n
-  \texttt{):(}S_0\texttt{,}\ldots\texttt{,}S_m\texttt{):}T
-$}
+\BinaryInfC{$T \sub T''$}
 \end{prooftree}
 \begin{prooftree}
 \AxiomC{}
@@ -65,66 +60,41 @@ $}
 \UnaryInfC{$T \sub \texttt{(} S_0 \texttt{,} \ldots \texttt{,} S_m \texttt{):} T$}
 \end{prooftree}
 \begin{prooftree}
-\AxiomC{$S \sub T$}
-\AxiomC{$T_0 \sub S_0$}
+\AxiomC{$T \sub T'$}
+\AxiomC{$T_0 \sub T_0'$}
 \AxiomC{$\dotsc$}
-\AxiomC{$T_n \sub S_n$}
+\AxiomC{$T_n \sub T_n'$}
 \LeftLabel{\textsc{S-Arrow}: }
 \QuaternaryInfC{$
-  \texttt{(}S_0\texttt{,}\ldots\texttt{,}S_n\texttt{):}S
+  \texttt{(}T_0'\texttt{,}\ldots\texttt{,}T_n'\texttt{):}T
 \sub
-  \texttt{(}T_0\texttt{,}\ldots\texttt{,}T_n\texttt{):}T
+  \texttt{(}T_0\texttt{,}\ldots\texttt{,}T_n\texttt{):}T'
 $}
 \end{prooftree}
 
-たとえば，$\Gamma = x : \mathrm{A}, y : \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}, z : \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}$のとき
 \begin{prooftree}
-  \AxiomC{$z: \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}\in\Gamma$}
-  \RightLabel{(\textsc{T-Var})}
-  \UnaryInfC{$\Gamma\vdash z: \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}$}
-  \AxiomC{}
-  \RightLabel{(\textsc{S-Comp})}
-  \UnaryInfC{$
-    \texttt{(}\mathrm{A}\texttt{,}\mathrm{A}\texttt{):}\mathrm{A}
-    \sub
-    \texttt{((}\mathrm{A}\texttt{):}\mathrm{A}
-    \texttt{,(}\mathrm{A}\texttt{):}\mathrm{A}
-    \texttt{):(}\mathrm{A}\texttt{):}\mathrm{A}
-  $}
-  \RightLabel{(\textsc{T-Sub})}
-  \BinaryInfC{$
-    \Gamma\vdash z: 
-    \texttt{((}\mathrm{A}\texttt{):}\mathrm{A}
-    \texttt{,(}\mathrm{A}\texttt{):}\mathrm{A}
-    \texttt{):(}\mathrm{A}\texttt{):}\mathrm{A}
-  $}
+\AxiomC{}
+\LeftLabel{\textsc{SA-Refl}: }
+\UnaryInfC{$\vdash_\mathrm{A} T <: T$}
 \end{prooftree}
 \begin{prooftree}
-  \AxiomC{$x : A \in \Gamma$}
-  \RightLabel{(\textsc{T-Var})}
-  \UnaryInfC{$\Gamma \vdash x : A$}
-  \AxiomC{}
-  \RightLabel{(\textsc{S-Const})}
-  \UnaryInfC{$\mathrm{A} \sub \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
-  \RightLabel{(\textsc{T-Sub})}
-  \BinaryInfC{$\Gamma \vdash x : \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+\AxiomC{$\vdash_\mathrm{A} T \sub T'$}
+\LeftLabel{\textsc{SA-Const}: }
+\UnaryInfC{$\vdash_\mathrm{A} T \sub \texttt{(} S_0 \texttt{,} \ldots \texttt{,} S_m \texttt{):} T'$}
 \end{prooftree}
 \begin{prooftree}
-  \AxiomC{$y: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A} \in \Gamma$}
-  \RightLabel{(\textsc{T-Var})}
-  \UnaryInfC{$\Gamma \vdash y: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
+\AxiomC{$\vdash_\mathrm{A} T \sub T'$}
+\AxiomC{$\vdash_\mathrm{A} T_0 \sub T_0'$}
+\AxiomC{$\dotsc$}
+\AxiomC{$\vdash_\mathrm{A} T_n \sub T_n'$}
+\LeftLabel{\textsc{SA-Arrow}: }
+\QuaternaryInfC{$
+\vdash_\mathrm{A}
+  \texttt{(}T_0'\texttt{,}\ldots\texttt{,}T_n'\texttt{):}T
+\sub
+  \texttt{(}T_0'\texttt{,}\ldots\texttt{,}T_n'\texttt{):}T'
+$}
 \end{prooftree}
-より
-\begin{prooftree}
-  \AxiomC{$
-    \Gamma\vdash z: 
-    \texttt{((}\mathrm{A}\texttt{):}\mathrm{A}
-    \texttt{,(}\mathrm{A}\texttt{):}\mathrm{A}
-    \texttt{):(}\mathrm{A}\texttt{):}\mathrm{A}
-  $}
-  \AxiomC{$\Gamma \vdash x: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
-  \AxiomC{$\Gamma \vdash y: \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
-  \RightLabel{(\textsc{T-App})}
-  \TrinaryInfC{$\Gamma \vdash z\texttt{(}x\texttt{,}y\texttt{)} : \texttt{(}\mathrm{A}\texttt{):}\mathrm{A}$}
-\end{prooftree}
+
+このとき$T \sub T' \iff \vdash_\mathrm{A} T \sub T'$（たぶん）．
 \end{document}
