@@ -7,13 +7,19 @@
 \begin{center}
 \begin{tabular}{rcll}
 $t$ &$\to$& $x$ & （変数） \\
-&|& $t\;\texttt{(}\;(t\;\texttt{,})^*\;t^?\;\texttt{)}$ & （関数適用）
+&|& $t \, (t^*)$ & （関数適用）
 \end{tabular}
 \end{center}
 \begin{center}
 \begin{tabular}{rcll}
-$T$ &$\to$& $\mathrm{A}$ & （原子型） \\
-&|& $\texttt{(}\;(T\;\texttt{,})^*\;T^?\;\texttt{):}\;T$ & （関数型）
+$T$ &$\to$& $A_1$ | $\ldots$ | $A_n$ & （原子型） \\
+&|& $(T^*) \, T$ & （関数型）
+\end{tabular}
+\end{center}
+\begin{center}
+\begin{tabular}{rcll}
+$\mathcal{F}$ &$\to$& $\varepsilon$ \\
+&|& $(T^*) \, \mathcal{F}$
 \end{tabular}
 \end{center}
 \begin{prooftree}
@@ -22,20 +28,12 @@ $T$ &$\to$& $\mathrm{A}$ & （原子型） \\
 \UnaryInfC{$\Gamma \vdash x : T$}
 \end{prooftree}
 \begin{prooftree}
-\AxiomC{$\Gamma \vdash t : \texttt{(} T_0 \texttt{,} \dotsc \texttt{,} T_n \texttt{):} T$}
-\AxiomC{$\Gamma \vdash t_0 : T_0$}
+\AxiomC{$\Gamma \vdash t : \mathcal{F}\, ( T_0 \ldots T_n ) \, T$}
+\AxiomC{$\Gamma \vdash t_0 : \mathcal{F}\, T_0$}
 \AxiomC{$\dotsc$}
-\AxiomC{$\Gamma \vdash t_n : T_n$}
-\LeftLabel{\textsc{T-App0}: }
-\QuaternaryInfC{$\Gamma \vdash t \texttt{(} t_0 \texttt{,} \dotsc \texttt{,} t_n \texttt{)} : T$}
-\end{prooftree}
-\begin{prooftree}
-\AxiomC{$\Gamma \vdash t : \texttt{(} T_0 \texttt{,} \dotsc \texttt{,} T_n \texttt{):} T$}
-\AxiomC{$\Gamma \vdash t_0 : \texttt{(} S_0 \texttt{,} \dotsc \texttt{,} S_m \texttt{):} T_0$}
-\AxiomC{$\dotsc$}
-\AxiomC{$\Gamma \vdash t_n : \texttt{(} S_0 \texttt{,} \dotsc \texttt{,} S_m \texttt{):} T_n$}
-\LeftLabel{\textsc{T-App1}: }
-\QuaternaryInfC{$\Gamma \vdash t \texttt{(} t_0 \texttt{,} \dotsc \texttt{,} t_n \texttt{)} : \texttt{(}S_0\texttt{,}\dotsc\texttt{,}S_m\texttt{):} T$}
+\AxiomC{$\Gamma \vdash t_n : \mathcal{F}\, T_n$}
+\LeftLabel{\textsc{T-App}: }
+\QuaternaryInfC{$\Gamma \vdash t \, ( t_0 \ldots t_n ) : \mathcal{F}\, T$}
 \end{prooftree}
 \begin{prooftree}
 \AxiomC{$\Gamma \vdash t : T$}
@@ -57,7 +55,7 @@ $T$ &$\to$& $\mathrm{A}$ & （原子型） \\
 \begin{prooftree}
 \AxiomC{}
 \LeftLabel{\textsc{S-Const}: }
-\UnaryInfC{$T \sub \texttt{(} S_0 \texttt{,} \ldots \texttt{,} S_m \texttt{):} T$}
+\UnaryInfC{$T \sub ( S_0 \ldots S_m )\, T$}
 \end{prooftree}
 \begin{prooftree}
 \AxiomC{$T \sub T'$}
@@ -66,21 +64,21 @@ $T$ &$\to$& $\mathrm{A}$ & （原子型） \\
 \AxiomC{$T_n \sub T_n'$}
 \LeftLabel{\textsc{S-Arrow}: }
 \QuaternaryInfC{$
-  \texttt{(}T_0'\texttt{,}\ldots\texttt{,}T_n'\texttt{):}T
+  (T_0' \ldots T_n' )\, T
 \sub
-  \texttt{(}T_0\texttt{,}\ldots\texttt{,}T_n\texttt{):}T'
+  (T_0 \ldots T_n )\, T'
 $}
 \end{prooftree}
 
 \begin{prooftree}
 \AxiomC{}
-\LeftLabel{\textsc{SA-Refl}: }
-\UnaryInfC{$\vdash_\mathrm{A} T <: T$}
+\LeftLabel{\textsc{SA-Atom}: }
+\UnaryInfC{$\vdash_\mathrm{A} A_i <: A_i$}
 \end{prooftree}
 \begin{prooftree}
 \AxiomC{$\vdash_\mathrm{A} T \sub T'$}
 \LeftLabel{\textsc{SA-Const}: }
-\UnaryInfC{$\vdash_\mathrm{A} T \sub \texttt{(} S_0 \texttt{,} \ldots \texttt{,} S_m \texttt{):} T'$}
+\UnaryInfC{$\vdash_\mathrm{A} T \sub ( S_0 \ldots S_m )\, T'$}
 \end{prooftree}
 \begin{prooftree}
 \AxiomC{$\vdash_\mathrm{A} T \sub T'$}
@@ -90,9 +88,9 @@ $}
 \LeftLabel{\textsc{SA-Arrow}: }
 \QuaternaryInfC{$
 \vdash_\mathrm{A}
-  \texttt{(}T_0'\texttt{,}\ldots\texttt{,}T_n'\texttt{):}T
+  (T_0' \ldots T_n')\, T
 \sub
-  \texttt{(}T_0'\texttt{,}\ldots\texttt{,}T_n'\texttt{):}T'
+  (T_0 \ldots T_n)\, T'
 $}
 \end{prooftree}
 
