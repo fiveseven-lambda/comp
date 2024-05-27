@@ -148,8 +148,10 @@ impl Expr {
                                 .fold(arg, |value, _| Value::Const(Box::new(value)))
                         })
                         .collect();
-                    for _ in &max_extra_calls {
-                        args = iter::once(value).chain(args).collect();
+                    for i in (0..max_extra_calls.len()).rev() {
+                        args = iter::once((0..i).fold(value, |v, _| Value::Const(Box::new(v))))
+                            .chain(args)
+                            .collect();
                         value = Value::Curry;
                     }
                     ty = max_extra_calls

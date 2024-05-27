@@ -1,0 +1,4 @@
+x = [((Int)Int)(Int)Int] + 1
+y = x([(Int)Int])
+z = y([Int])
+z(10)
