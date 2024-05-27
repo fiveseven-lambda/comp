@@ -1,1 +1,4 @@
-とりあえず `example` を読んでから `$ cargo run < example` を実行してみてくれ．今できる説明はこれだけだ．
+Run:
+```
+$ cargo run < answer_to_the_ultimate_question_of_life_the_universe_and_everything
+```
