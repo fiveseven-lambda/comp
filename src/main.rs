@@ -3,7 +3,7 @@ mod context;
 mod ir;
 mod parser;
 
-use std::io::BufRead;
+use std::{cell::RefCell, io::BufRead, rc::Rc};
 
 fn main() {
     let source = std::io::stdin().lock();
@@ -15,16 +15,16 @@ fn main() {
             parser::parse(&line).map(|expr| context.translate_expr(expr))
         })
         .collect();
-    let vars_ty: Vec<_> = (0..context.num_variables())
-        .map(|_| ir::Ty::new(ir::TyInner::Undetermined))
+    let vars: Vec<_> = (0..context.num_variables())
+        .map(|_| {
+            (
+                ir::Ty::new(ir::TyInner::Ref(ir::Ty::new(ir::TyInner::Undetermined))),
+                ir::Value::Var(Rc::new(RefCell::new(None))),
+            )
+        })
         .collect();
     for expr in &mut exprs {
-        expr.get_ty(&vars_ty);
-    }
-    for (idx, ty) in vars_ty.iter().enumerate() {
-        println!("v{idx}: {ty}");
-    }
-    for expr in &exprs {
-        println!("{expr}");
+        let (ty, value) = expr.eval(&vars);
+        println!("{expr}: {ty}\n  -> {value}");
     }
 }

@@ -1,5 +1,5 @@
 mod fmt;
-use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+use std::{cell::RefCell, collections::VecDeque, iter, rc::Rc};
 
 pub enum Expr {
     Int(i32),
@@ -18,69 +18,147 @@ pub enum Func {
     Rem,
 }
 
-impl Expr {
-    pub fn get_ty(&mut self, vars_ty: &[Ty]) -> Ty {
-        match *self {
-            Expr::Int(_) => Ty::new(TyInner::Int),
-            Expr::Var(idx) => Ty::new(TyInner::Ref(vars_ty[idx].clone())),
-            Expr::Func {
-                ref func,
-                ref mut calls,
-            } => {
-                let mut ty = match func {
-                    Func::Id(ty) => Ty::new(TyInner::Func {
-                        args: vec![ty.clone()],
-                        ret: ty.clone(),
-                    }),
-                    Func::Add | Func::Sub | Func::Mul | Func::Div | Func::Rem => {
-                        Ty::new(TyInner::Func {
-                            args: vec![Ty::new(TyInner::Int), Ty::new(TyInner::Int)],
-                            ret: Ty::new(TyInner::Int),
-                        })
-                    }
-                    Func::Assign(ty) => Ty::new(TyInner::Func {
-                        args: vec![Ty::new(TyInner::Ref(ty.clone())), ty.clone()],
-                        ret: Ty::new(TyInner::Ref(ty.clone())),
-                    }),
-                    Func::Deref(ty) => Ty::new(TyInner::Func {
-                        args: vec![Ty::new(TyInner::Ref(ty.clone()))],
-                        ret: ty.clone(),
-                    }),
-                };
-                for call in calls {
-                    let (args, ret) = ty.get_args_ret();
-                    assert_eq!(call.args.len(), args.len());
-                    let mut max_extra_calls = VecDeque::new();
-                    for (expected_arg, call_arg) in args.iter().zip(&mut call.args) {
-                        let extra_calls = call_arg
-                            .get_ty(vars_ty)
-                            .unify(expected_arg)
-                            .expect("type error");
-                        if max_extra_calls.len() < extra_calls.len() {
-                            max_extra_calls = extra_calls;
-                        }
-                    }
-                    call.extra = max_extra_calls.clone();
-                    ty = ret;
-                    for args in max_extra_calls {
-                        ty = Ty::new(TyInner::Func { args, ret: ty });
-                    }
+pub struct Call {
+    pub args: Vec<Expr>,
+}
+
+#[derive(Clone)]
+pub enum Value {
+    Int(i32),
+    Var(Rc<RefCell<Option<Value>>>),
+    Id,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    Assign,
+    Deref,
+    Curry,
+    App(Box<Value>, Vec<Value>),
+    Const(Box<Value>),
+}
+
+impl Value {
+    fn call(&self, args: &[Value]) -> Value {
+        match self {
+            Value::Id => args[0].clone(),
+            Value::Add => match (&args[0], &args[1]) {
+                (&Value::Int(x), &Value::Int(y)) => Value::Int(x + y),
+                _ => panic!(),
+            },
+            Value::Sub => match (&args[0], &args[1]) {
+                (&Value::Int(x), &Value::Int(y)) => Value::Int(x - y),
+                _ => panic!(),
+            },
+            Value::Mul => match (&args[0], &args[1]) {
+                (&Value::Int(x), &Value::Int(y)) => Value::Int(x * y),
+                _ => panic!(),
+            },
+            Value::Div => match (&args[0], &args[1]) {
+                (&Value::Int(x), &Value::Int(y)) => Value::Int(x / y),
+                _ => panic!(),
+            },
+            Value::Rem => match (&args[0], &args[1]) {
+                (&Value::Int(x), &Value::Int(y)) => Value::Int(x % y),
+                _ => panic!(),
+            },
+            Value::Assign => match args[0] {
+                Value::Var(ref var) => {
+                    *var.borrow_mut() = Some(args[1].clone());
+                    Value::Var(var.clone())
                 }
-                ty
+                _ => panic!(),
+            },
+            Value::Deref => match args[0] {
+                Value::Var(ref var) => var.borrow().clone().expect(""),
+                _ => panic!(),
+            },
+            Value::Curry => Value::App(Box::new(args[0].clone()), args[1..].to_vec()),
+            Value::App(func, converters) => {
+                let converted_args: Vec<_> = converters
+                    .iter()
+                    .map(|converter| converter.call(args))
+                    .collect();
+                func.call(&converted_args)
             }
+            Value::Const(value) => *value.clone(),
+            _ => panic!("not a function"),
         }
     }
 }
 
-pub struct Call {
-    pub args: Vec<Expr>,
-    pub extra: VecDeque<Vec<Ty>>,
+macro_rules! ty {
+    (Int) => {
+        Ty::new(TyInner::Int)
+    };
+    (Ref $ty:expr) => {
+        Ty::new(TyInner::Ref($ty))
+    };
+    (($($args:expr),*) $ret:expr) => {
+        Ty::new(TyInner::Func { args: vec![$($args),*], ret: $ret } )
+    }
 }
-impl Call {
-    pub fn new(args: Vec<Expr>) -> Call {
-        Call {
-            args,
-            extra: VecDeque::new(),
+
+impl Expr {
+    pub fn eval(&self, vars: &[(Ty, Value)]) -> (Ty, Value) {
+        match *self {
+            Expr::Int(value) => (ty!(Int), Value::Int(value)),
+            Expr::Var(idx) => vars[idx].clone(),
+            Expr::Func {
+                ref func,
+                ref calls,
+            } => {
+                let (mut ty, mut value) = match func {
+                    Func::Id(ty) => (ty!((ty.clone()) ty.clone()), Value::Id),
+                    Func::Add => (ty!((ty!(Int), ty!(Int)) ty!(Int)), Value::Add),
+                    Func::Sub => (ty!((ty!(Int), ty!(Int)) ty!(Int)), Value::Sub),
+                    Func::Mul => (ty!((ty!(Int), ty!(Int)) ty!(Int)), Value::Mul),
+                    Func::Div => (ty!((ty!(Int), ty!(Int)) ty!(Int)), Value::Div),
+                    Func::Rem => (ty!((ty!(Int), ty!(Int)) ty!(Int)), Value::Rem),
+                    Func::Assign(ty) => (
+                        ty!((ty!(Ref ty.clone()), ty.clone()) ty!(Ref ty.clone())),
+                        Value::Assign,
+                    ),
+                    Func::Deref(ty) => (ty!((ty!(Ref ty.clone())) ty.clone()), Value::Deref),
+                };
+                for call in calls {
+                    let (args_ty, ret_ty) = ty.get_args_ret();
+                    assert_eq!(call.args.len(), args_ty.len());
+                    let call_args: Vec<_> = args_ty
+                        .iter()
+                        .zip(&call.args)
+                        .map(|(arg_ty, call_arg)| {
+                            let (call_arg_ty, call_arg_value) = call_arg.eval(vars);
+                            let extra_calls = call_arg_ty.unify(arg_ty).expect("type error");
+                            (call_arg_value, extra_calls)
+                        })
+                        .collect();
+                    let max_extra_calls = match call_args
+                        .iter()
+                        .max_by_key(|(_, extra_calls)| extra_calls.len())
+                    {
+                        Some((_, extra_calls)) => extra_calls.clone(),
+                        None => VecDeque::new(),
+                    };
+                    let mut args: Vec<Value> = call_args
+                        .into_iter()
+                        .map(|(arg, extra_calls)| {
+                            (extra_calls.len()..max_extra_calls.len())
+                                .fold(arg, |value, _| Value::Const(Box::new(value)))
+                        })
+                        .collect();
+                    for _ in &max_extra_calls {
+                        args = iter::once(value).chain(args).collect();
+                        value = Value::Curry;
+                    }
+                    ty = max_extra_calls
+                        .into_iter()
+                        .fold(ret_ty, |ret, args| Ty::new(TyInner::Func { args, ret }));
+                    value = value.call(&args);
+                }
+                (ty, value)
+            }
         }
     }
 }

@@ -9,16 +9,6 @@ impl Display for Expr {
             Expr::Func { func, calls } => {
                 write!(f, "{func}")?;
                 for call in calls {
-                    for args in &call.extra {
-                        write!(
-                            f,
-                            "{{{}}}",
-                            args.iter()
-                                .map(|arg| format!("{arg}"))
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        )?;
-                    }
                     write!(
                         f,
                         "({})",
@@ -75,6 +65,36 @@ impl Display for Ty {
                 )
             }
             TyInner::SameAs(ref ty) => write!(f, "{ty}"),
+        }
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Int(value) => write!(f, "{value}"),
+            Value::Var(var) => match *var.borrow() {
+                Some(ref value) => write!(f, "-> {}", value),
+                None => write!(f, "uninitialized"),
+            },
+            Value::Id => write!(f, "Id"),
+            Value::Add => write!(f, "Add"),
+            Value::Sub => write!(f, "Sub"),
+            Value::Mul => write!(f, "Mul"),
+            Value::Div => write!(f, "Div"),
+            Value::Rem => write!(f, "Rem"),
+            Value::Assign => write!(f, "Assign"),
+            Value::Deref => write!(f, "Deref"),
+            Value::Curry => write!(f, "Curry"),
+            Value::App(func, args) => write!(
+                f,
+                "{func}({})",
+                args.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            Value::Const(value) => write!(f, "const {value}"),
         }
     }
 }
